@@ -1,6 +1,6 @@
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
@@ -15,7 +15,6 @@ const GasChart = ({ currentGas }) => {
   const [ethPrice, setEthPrice] = useState({});
   const [lastUpdated, setLastUpdated] = useState("");
 
-  // 🌍 Currency symbols
   const symbols = {
     USD: "$",
     INR: "₹",
@@ -40,7 +39,7 @@ const GasChart = ({ currentGas }) => {
     fetchPrice();
   }, []);
 
-  // 📊 Update chart
+  // 📊 Update data
   useEffect(() => {
     const interval = setInterval(() => {
       let value = Number(currentGas);
@@ -52,7 +51,7 @@ const GasChart = ({ currentGas }) => {
       const formatted = Number(value.toFixed(2));
 
       setData((prev) => [
-        ...prev.slice(-14),
+        ...prev.slice(-20),
         {
           time: new Date().toLocaleTimeString(),
           gas: formatted,
@@ -65,25 +64,40 @@ const GasChart = ({ currentGas }) => {
     return () => clearInterval(interval);
   }, [currentGas, currency, ethPrice]);
 
-  const latestValue = data.length > 0 ? data[data.length - 1].gas : 0;
+  const latest = data[data.length - 1]?.gas || 0;
+  const first = data[0]?.gas || 0;
+
+  // 📈 Calculate trend
+  const change = latest - first;
+  const percent = first ? ((change / first) * 100).toFixed(2) : 0;
+
+  const isUp = change >= 0;
 
   return (
     <div className="mt-6 p-px rounded-2xl">
       <div className="bg-[rgba(255,255,255,0.05)] backdrop-blur-xl rounded-2xl p-5 border border-[rgb(var(--border))]">
 
-        {/* Header */}
+        {/* HEADER */}
         <div className="flex justify-between items-center mb-4">
           <div>
             <h2 className="text-lg font-semibold text-[rgb(var(--text))]">
-              Gas Price Trend
+              Gas Market
             </h2>
 
-            {/* 💰 Current Value */}
+            {/* 💰 Price */}
             <p className="text-2xl font-bold mt-1">
-              {symbols[currency]} {latestValue}
+              {symbols[currency]} {latest}
             </p>
 
-            {/* ⏱️ Last updated */}
+            {/* 📈 Change */}
+            <p
+              className={`text-sm ${
+                isUp ? "text-green-500" : "text-red-500"
+              }`}
+            >
+              {isUp ? "▲" : "▼"} {percent}% ({change.toFixed(2)})
+            </p>
+
             <p className="text-xs text-[rgb(var(--muted))]">
               Updated: {lastUpdated}
             </p>
@@ -102,18 +116,24 @@ const GasChart = ({ currentGas }) => {
           </select>
         </div>
 
-        {/* Chart */}
+        {/* CHART */}
         <ResponsiveContainer width="100%" height={260}>
-          <LineChart data={data}>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="rgba(150,150,150,0.1)"
-            />
+          <AreaChart data={data}>
+            <CartesianGrid stroke="rgba(150,150,150,0.1)" />
 
+            {/* Gradient */}
             <defs>
-              <linearGradient id="gasGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#6366f1" stopOpacity={0.1} />
+              <linearGradient id="colorGas" x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="5%"
+                  stopColor={isUp ? "#22c55e" : "#ef4444"}
+                  stopOpacity={0.7}
+                />
+                <stop
+                  offset="95%"
+                  stopColor={isUp ? "#22c55e" : "#ef4444"}
+                  stopOpacity={0.05}
+                />
               </linearGradient>
             </defs>
 
@@ -131,20 +151,19 @@ const GasChart = ({ currentGas }) => {
                 backgroundColor: "rgb(var(--card))",
                 border: "1px solid rgb(var(--border))",
                 borderRadius: "10px",
-                color: "rgb(var(--text))",
               }}
             />
 
-            <Line
+            <Area
               type="monotone"
               dataKey="gas"
-              stroke="url(#gasGradient)"
-              strokeWidth={3}
+              stroke={isUp ? "#22c55e" : "#ef4444"}
+              fill="url(#colorGas)"
+              strokeWidth={2}
               dot={false}
-              activeDot={{ r: 6 }}
-              isAnimationActive={true}
+              isAnimationActive
             />
-          </LineChart>
+          </AreaChart>
         </ResponsiveContainer>
       </div>
     </div>
