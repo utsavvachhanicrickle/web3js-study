@@ -18,9 +18,9 @@ export const getWalletData = async () => {
   if (accounts.length === 0) return null;
 
   const account = accounts[0];
-
+  console.log(accounts[0]);
   const balanceWei = await web3.eth.getBalance(account);
-  const balance = web3.utils.fromWei(balanceWei, "ether");
+  const balanceEth = web3.utils.fromWei(balanceWei, "ether");
 
   const chainId = await web3.eth.getChainId();
   const networkId = await web3.eth.net.getId();
@@ -30,7 +30,7 @@ export const getWalletData = async () => {
 
   return {
     account,
-    balance,
+    balance: balanceEth,
     chainId,
     networkId,
     blockNumber,
