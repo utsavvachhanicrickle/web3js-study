@@ -10,10 +10,14 @@
 }
 
 /* 🌙 DARK THEME */
-.dark {
+[data-theme="dark"] {
   --bg: #0f172a;        
   --card: #1e293b;      
   --text: #f9fafb;      
   --muted: #9ca3af;     
   --border: #374151;    
+}
+
+body{
+ background-color: var(--bg);
 }

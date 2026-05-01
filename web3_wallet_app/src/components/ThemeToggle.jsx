@@ -1,26 +1,15 @@
 import { useContext } from "react";
-import { ThemeContext } from "../context/ThemeContext";
+import { DarkModeContext } from "../context/darkModeContext";
 import { useEffect } from "react";
 
 const ThemeToggle = () => {
-  const { dark, setDark } = useContext(ThemeContext);
-  useEffect(() => {
-    const root = document.documentElement;
-
-    if (dark) {
-      root.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      root.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [dark]);
+  const { darkMode, setDarkMode } = useContext(DarkModeContext);
   return (
     <button
-      onClick={() => setDark(!dark)}
-      className="px-3 py-1 bg-gray-700 text-white rounded"
+      onClick={() => setDarkMode(!darkMode)}
+      className="px-3 py-1 bg-(--bg) text-(--text) rounded"
     >
-      {dark ? "Light" : "Dark"}
+      {darkMode ? "Light" : "Dark"}
     </button>
   );
 };

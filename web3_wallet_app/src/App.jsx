@@ -6,13 +6,13 @@ import BlockchainStats from "./components/BlockchainStats";
 import GasChart from "./components/GasChart";
 
 import { connectWallet, getWalletData } from "./utils/wallet";
-import { ThemeProvider } from "./context/ThemeContext";
+import { DarkModeContextProvider } from "./context/darkModeContext";
 
 function App() {
   return (
-    <ThemeProvider>
+    <DarkModeContextProvider>
       <MainApp />
-    </ThemeProvider>
+    </DarkModeContextProvider>
   );
 }
 
