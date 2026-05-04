@@ -1,27 +1,42 @@
 import { useEffect, useState } from "react";
 
-const TransactionHistory = ({ account }) => {
+const DEMO_ACCOUNTS = [
+  {
+    label: "Binance Wallet 1",
+    address: "0x28C6c06298d514Db089934071355E5743bf21d60",
+  },
+  {
+    label: "Vitalik Wallet",
+    address: "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045",
+  },
+];
+
+const TransactionHistory = () => {
+  const [selectedAccount, setSelectedAccount] = useState(
+    DEMO_ACCOUNTS[0].address
+  );
   const [txs, setTxs] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [page, setPage] = useState(1);
+  const pageSize = 20;
+
   useEffect(() => {
-    if (!account) return;
+    const apiKey = import.meta.env.VITE_ETHERSCAN_API_KEY;
 
     const fetchTxs = async () => {
       try {
         setLoading(true);
 
         const res = await fetch(
-          `https://api-sepolia.etherscan.io/api?module=account&action=txlist&address=${account}&startblock=0&endblock=99999999&sort=desc&apikey=YourApiKey`
+          `https://api.etherscan.io/v2/api?chainid=1&module=account&action=txlist&address=${selectedAccount}&page=${page}&offset=${pageSize}&sort=desc&apikey=${apiKey}`
         );
 
         const data = await res.json();
-
         console.log("Etherscan:", data);
 
-        // ✅ SAFE CHECK
         if (data.status === "1" && Array.isArray(data.result)) {
-          setTxs(data.result.slice(0, 10)); // latest 10
+          setTxs(data.result);
         } else {
           setTxs([]);
         }
@@ -34,95 +49,129 @@ const TransactionHistory = ({ account }) => {
     };
 
     fetchTxs();
-  }, [account]);
+  }, [selectedAccount, page]);
+
+  const getAge = (timestamp) => {
+    const secondsAgo = Math.floor(Date.now() / 1000 - timestamp);
+    const minutes = Math.floor(secondsAgo / 60);
+
+    if (minutes < 1) return `${secondsAgo}s ago`;
+    if (minutes < 60) return `${minutes} mins ago`;
+
+    const hours = Math.floor(minutes / 60);
+    return `${hours} hrs ago`;
+  };
 
   return (
-    <div className="p-4 mt-6 rounded-xl border border-(--border) bg-(--card) text-(--text)">
-      <h2 className="font-semibold mb-4 text-lg">
-        Transaction History
-      </h2>
+    <div className="p-4 mt-6 rounded-xl border text-text border-(--border) bg-(--card)">
+      <h2 className="font-semibold mb-4 text-lg">Transaction History</h2>
+
+      {/* 🔽 Dropdown */}
+      <select
+        value={selectedAccount}
+        onChange={(e) => {
+          setSelectedAccount(e.target.value);
+          setPage(1); // reset page
+        }}
+        className="mb-4 p-2 rounded "
+      >
+        {DEMO_ACCOUNTS.map((acc) => (
+          <option key={acc.address} value={acc.address}>
+            {acc.label}
+          </option>
+        ))}
+      </select>
 
       {/* 🔄 Loading */}
-      {loading && (
-        <p className="text-center text-(--muted)">
-          Loading transactions...
-        </p>
-      )}
+      {loading && <p className="text-center">Loading...</p>}
 
       {/* 🚫 Empty */}
       {!loading && txs.length === 0 && (
-        <p className="text-center text-(--muted)">
-          No transactions found 🚫
-        </p>
+        <p className="text-center">No transactions found 🚫</p>
       )}
 
       {/* 📊 Table */}
       {!loading && txs.length > 0 && (
-        <div className="overflow-x-auto">
+        <>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-(--border)">
-                <th className="text-left p-2">Type</th>
-                <th className="text-left p-2">Address</th>
-                <th className="text-left p-2">Amount</th>
-                <th className="text-left p-2">Time</th>
-                <th className="text-left p-2">Tx</th>
+              <tr className="border-b">
+                <th className="p-2 text-left">Status</th>
+                <th className="p-2 text-left">Method</th>
+                <th className="p-2 text-left">From</th>
+                <th className="p-2 text-left">To</th>
+                <th className="p-2 text-left">Amount</th>
+                <th className="p-2 text-left">Age</th>
+                <th className="p-2 text-left">Tx</th>
               </tr>
             </thead>
 
             <tbody>
-              {txs.map((tx) => {
-                const isOutgoing =
-                  tx.from.toLowerCase() === account.toLowerCase();
+              {txs.map((tx) => (
+                <tr key={tx.hash} className="border-b">
+                  <td className="p-2">
+                    {tx.isError === "0" ? (
+                      <span className="text-green-400">Success</span>
+                    ) : (
+                      <span className="text-red-400">Failed</span>
+                    )}
+                  </td>
 
-                return (
-                  <tr
-                    key={tx.hash}
-                    className="border-b border-(--border) hover:bg-[rgba(255,255,255,0.03)]"
-                  >
-                    {/* 🔄 Type */}
-                    <td className="p-2">
-                      {isOutgoing ? (
-                        <span className="text-red-400">Sent</span>
-                      ) : (
-                        <span className="text-green-400">Received</span>
-                      )}
-                    </td>
+                  <td className="p-2">
+                    {tx.input === "0x" ? "Transfer" : "Contract"}
+                  </td>
 
-                    {/* 📍 Address */}
-                    <td className="p-2">
-                      {(isOutgoing ? tx.to : tx.from).slice(0, 6)}...
-                      {(isOutgoing ? tx.to : tx.from).slice(-4)}
-                    </td>
+                  <td className="p-2">
+                    {tx.from.slice(0, 6)}...{tx.from.slice(-4)}
+                  </td>
 
-                    {/* 💰 Amount */}
-                    <td className="p-2">
-                      {(tx.value / 1e18).toFixed(4)} ETH
-                    </td>
+                  <td className="p-2">
+                    {tx.to
+                      ? `${tx.to.slice(0, 6)}...${tx.to.slice(-4)}`
+                      : "Contract"}
+                  </td>
 
-                    {/* ⏱ Time */}
-                    <td className="p-2">
-                      {new Date(
-                        tx.timeStamp * 1000
-                      ).toLocaleString()}
-                    </td>
+                  <td className="p-2">
+                    {(Number(tx.value) / 1e18).toFixed(4)} ETH
+                  </td>
 
-                    {/* 🔗 Tx Link */}
-                    <td className="p-2 text-blue-400">
-                      <a
-                        href={`https://sepolia.etherscan.io/tx/${tx.hash}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        View
-                      </a>
-                    </td>
-                  </tr>
-                );
-              })}
+                  <td className="p-2">
+                    {getAge(Number(tx.timeStamp))}
+                  </td>
+
+                  <td className="p-2 text-blue-400">
+                    <a
+                      href={`https://etherscan.io/tx/${tx.hash}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      View
+                    </a>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
-        </div>
+
+          {/* 🔢 Pagination Controls */}
+          <div className="flex justify-between mt-4">
+            <button
+              onClick={() => setPage((p) => Math.max(p - 1, 1))}
+              className="px-3 py-1  rounded"
+            >
+              ⬅ Prev
+            </button>
+
+            <span>Page {page}</span>
+
+            <button
+              onClick={() => setPage((p) => p + 1)}
+              className="px-3 py-1  rounded"
+            >
+              Next ➡
+            </button>
+          </div>
+        </>
       )}
     </div>
   );

@@ -62,7 +62,7 @@ const GasChart = ({ currentGas }) => {
   }, [currentGas, currency, ethPrice]);
 
   return (
-    <div className="mt-6 p-4 rounded-xl border border-[rgb(var(--border))] bg-[rgb(var(--card))]">
+    <div className="mt-6 p-4 rounded-xl border text-(--text) border-[rgb(var(--border))] bg-[rgb(var(--card))]">
       
       {/* Header */}
       <div className="flex justify-between mb-4">

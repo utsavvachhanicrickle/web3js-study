@@ -55,7 +55,7 @@ const valueHex = "0x" + BigInt(valueWei).toString(16);
   };
 
   return (
-    <div className="p-4 mt-4 border rounded-xl">
+    <div className="p-4 mt-4  text-(--text) border rounded-xl">
       <h2 className="font-semibold mb-2">Send ETH</h2>
 
       <input
