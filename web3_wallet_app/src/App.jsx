@@ -4,7 +4,8 @@ import WalletOverview from "./components/WalletOverview";
 import NetworkInfo from "./components/NetworkInfo";
 import BlockchainStats from "./components/BlockchainStats";
 import GasChart from "./components/GasChart";
-
+import SendETH from "./components/SendETH";
+import TransactionHistory from "./components/TransactionHistory";
 import { connectWallet, getWalletData } from "./utils/wallet";
 import { DarkModeContextProvider } from "./context/darkModeContext";
 
@@ -57,12 +58,9 @@ function MainApp() {
       return () => {
         window.ethereum.removeListener(
           "accountsChanged",
-          handleAccountsChanged
+          handleAccountsChanged,
         );
-        window.ethereum.removeListener(
-          "chainChanged",
-          handleChainChanged
-        );
+        window.ethereum.removeListener("chainChanged", handleChainChanged);
       };
     }
   }, []);
@@ -102,6 +100,13 @@ function MainApp() {
             <BlockchainStats data={data} />
 
             <GasChart currentGas={data.gasPrice} />
+          </>
+        )}
+
+        {data && (
+          <>
+            <SendETH account={data.account} balance={Number(data.balance)} />
+            <TransactionHistory account={data.account} />
           </>
         )}
       </div>
