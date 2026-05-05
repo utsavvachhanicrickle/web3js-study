@@ -5,7 +5,7 @@ export const connectWallet = async () => {
 
   await window.ethereum.request({
     method: "eth_requestAccounts",
-  });
+  }); 
 
   return getWalletData();
 };
