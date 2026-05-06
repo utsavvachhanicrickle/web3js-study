@@ -9,6 +9,8 @@ A simple Web3 project demonstrating:
 * 🔥 Real-time updates using **events + subscriptions**
 
 ---
+https://medium.com/coinmonks/how-to-subscribe-smart-contract-events-using-web3-1-0-93e996c06af2
+---
 
 # 📁 Project Structure
 
