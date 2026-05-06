@@ -7,8 +7,7 @@ const abi = JSON.parse(fs.readFileSync("abi.json"));
 const address = fs.readFileSync("address.txt", "utf8");
 
 const contract = new web3.eth.Contract(abi, address);
-console.log(contract.methods);
-
+// console.log(contract.methods);
 
 async function main() {
   const accounts = await web3.eth.getAccounts();
@@ -33,13 +32,12 @@ async function main() {
 
       console.log("Yes:", yes, "No:", no);
     }
-
   } catch (error) {
     // 👇 Clean error handling
     if (error?.cause?.errorArgs?.message) {
       console.log("❌", error.cause.errorArgs.message);
     } else {
-      console.log("❌ Transaction failed");
+      console.log("❌ Transaction failed", error);
     }
   }
 }
