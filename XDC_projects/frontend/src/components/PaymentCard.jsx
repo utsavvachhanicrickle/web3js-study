@@ -9,190 +9,255 @@ import api from "../api/axios";
 import { setReceipt } from "../features/payment/paymentSlice";
 
 const PaymentCard = () => {
+
   const dispatch = useDispatch();
 
   const [amount, setAmount] = useState(0.01);
 
-const sendPayment = async () => {
 
-  try {
 
-    if (!window.ethereum) {
+  const sendPayment = async () => {
 
-      alert("MetaMask not installed");
+    try {
 
-      return;
-    }
+      if (!window.ethereum) {
 
-    const web3 = new Web3(
-      window.ethereum
-    );
+        alert("MetaMask not installed");
 
-    const accounts =
-      await web3.eth.getAccounts();
-
-    const adminWallet =
-      import.meta.env
-        .VITE_ADMIN_WALLET;
-
-    console.log(
-      "Sending Payment..."
-    );
+        return;
+      }
 
 
 
-    // =========================
-    // SEND TRANSACTION
-    // =========================
-
-    const tx =
-      await web3.eth.sendTransaction({
-
-        from: accounts[0],
-
-        to: adminWallet,
-
-        value: web3.utils.toWei(
-          amount.toString(),
-          "ether"
-        )
-      });
+      const web3 = new Web3(
+        window.ethereum
+      );
 
 
 
-
-    console.log(
-      "Transaction Success:"
-    );
-
-    console.log(tx);
+      const accounts =
+        await web3.eth.getAccounts();
 
 
 
-
-    // =========================
-    // START VERIFY LOOP
-    // =========================
-
-    let attempts = 0;
-
-    const maxAttempts = 10;
+      const adminWallet =
+        import.meta.env
+          .VITE_ADMIN_WALLET;
 
 
 
-    const interval = setInterval(
-      async () => {
+      console.log(
+        "Admin Wallet:"
+      );
 
-        try {
-
-          attempts++;
-
-          console.log(
-            `Verify Attempt ${attempts}`
-          );
+      console.log(
+        adminWallet
+      );
 
 
 
-          const response =
-            await api.post(
-              "/payments/verify",
-              {
-                txHash:
-                  tx.transactionHash
-              }
+      console.log(
+        "Sending Payment..."
+      );
+
+
+
+      // =========================
+      // SEND TRANSACTION
+      // =========================
+
+      const tx =
+        await web3.eth.sendTransaction({
+
+          from: accounts[0],
+
+          to: adminWallet,
+
+          value: web3.utils.toWei(
+            amount.toString(),
+            "ether"
+          )
+        });
+
+
+
+      console.log(
+        "FULL TX:"
+      );
+
+      console.log(tx);
+
+
+
+      // =========================
+      // SAFE TX HASH
+      // =========================
+
+      const txHash =
+        tx.transactionHash ||
+        tx.hash;
+
+
+
+      console.log(
+        "TX HASH:"
+      );
+
+      console.log(
+        txHash
+      );
+
+
+
+      // =========================
+      // START VERIFY LOOP
+      // =========================
+
+      let attempts = 0;
+
+      const maxAttempts = 10;
+
+
+
+      const interval = setInterval(
+
+        async () => {
+
+          try {
+
+            attempts++;
+
+            console.log(
+              `Verify Attempt ${attempts}`
             );
 
 
 
-          console.log(
-            "Backend Response:"
-          );
+            const response =
+              await api.post(
+                "/payments/verify",
+                {
+                  txHash
+                }
+              );
 
-          console.log(
-            response.data
-          );
 
 
-
-          // success
-          if (
-            response.data.success
-          ) {
-
-            dispatch(
-              setReceipt(
-                response.data
-                  .transaction
-              )
+            console.log(
+              "Backend Response:"
             );
 
             console.log(
-              "Transaction Verified"
+              response.data
             );
+
+
+
+            // success
+            if (
+              response.data.success
+            ) {
+
+              dispatch(
+                setReceipt(
+                  response.data
+                    .transaction
+                )
+              );
+
+
+
+              console.log(
+                "Transaction Verified"
+              );
+
+
+
+              clearInterval(
+                interval
+              );
+            }
+
+          } catch (error) {
+
+            console.log(
+              "Verify Error:"
+            );
+
+
+
+            console.log(
+              error.response?.data ||
+              error.message
+            );
+          }
+
+
+
+          // stop retry
+          if (
+            attempts >= maxAttempts
+          ) {
+
+            console.log(
+              "Verification Timeout"
+            );
+
+
 
             clearInterval(
               interval
             );
           }
 
-        } catch (error) {
+        },
 
-          console.log(
-            "Verify Error:"
-          );
+        // every 5 sec
+        5000
+      );
 
-          console.log(
-            error.response?.data ||
-            error.message
-          );
-        }
+    } catch (error) {
+
+      console.log(
+        "Payment Error:"
+      );
+
+      console.log(error);
+    }
+  };
 
 
-
-        // stop retries
-        if (
-          attempts >= maxAttempts
-        ) {
-
-          console.log(
-            "Verification Timeout"
-          );
-
-          clearInterval(
-            interval
-          );
-        }
-
-      },
-
-      // every 5 sec
-      5000
-    );
-
-  } catch (error) {
-
-    console.log(
-      "Payment Error:"
-    );
-
-    console.log(error);
-  }
-};
 
   return (
+
     <div className="bg-slate-800 p-6 rounded mt-6">
-      <h2 className="text-lg font-bold mb-4">Send Payment</h2>
+
+      <h2 className="text-lg font-bold mb-4">
+        Send Payment
+      </h2>
+
+
 
       <input
         type="number"
         value={amount}
-        onChange={(e) => setAmount(e.target.value)}
+        onChange={(e) =>
+          setAmount(
+            e.target.value
+          )
+        }
         className="w-full p-3 rounded bg-slate-700 mb-4"
       />
 
-      <button onClick={sendPayment} className="bg-green-600 px-4 py-2 rounded">
+
+
+      <button
+        onClick={sendPayment}
+        className="bg-green-600 px-4 py-2 rounded"
+      >
         Send TXDC
       </button>
+
     </div>
   );
 };
