@@ -17,7 +17,7 @@ async function deploy() {
     })
     .send({
       from: accounts[0],
-      gas: Web3.utils.toWei("1", "ether"),
+      gas: 3000000
     });
 
   fs.writeFileSync("address.txt", instance.options.address);

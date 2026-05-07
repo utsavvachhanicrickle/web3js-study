@@ -1,93 +1,145 @@
 import { useEffect, useState } from "react";
 import { Web3 } from "web3";
 import abi from "./abi.json";
-import addressFile from "./address.txt";
 
 function App() {
   const [account, setAccount] = useState("");
   const [contract, setContract] = useState(null);
 
+  // ✅ REAL CONTRACT ADDRESS
+  const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 
-  const contractAddress = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266";
   useEffect(() => {
     async function load() {
-      if (window.ethereum) {
+      try {
+        if (!window.ethereum) {
+          alert("Install MetaMask");
+          return;
+        }
+
         const web3 = new Web3(window.ethereum);
 
-        // connect wallet
         const accounts = await window.ethereum.request({
           method: "eth_requestAccounts",
         });
 
         setAccount(accounts[0]);
 
-        const instance = new web3.eth.Contract(abi, contractAddress);
+        const instance = new web3.eth.Contract(
+          abi,
+          contractAddress
+        );
 
         setContract(instance);
-      } else {
-        alert("Install MetaMask");
+
+        alert("Wallet Connected");
+      } catch (error) {
+        console.log(error);
+
+        alert("Failed to connect wallet");
       }
     }
 
     load();
   }, []);
 
-  // 🔹 CREATE JOB
+  // ✅ CREATE JOB
   const createJob = async () => {
-    await contract.methods.createJob().send({
-      from: account,
-      value: Web3.utils.toWei("1", "ether"),
-    });
+    try {
+      if (!contract) {
+        alert("Contract not loaded");
+        return;
+      }
 
-    alert("Job Created");
+      await contract.methods.createJob().send({
+        from: account,
+        value: Web3.utils.toWei("1", "ether"),
+      });
+
+      alert("✅ Job Created");
+    } catch (error) {
+      console.log(error);
+
+      alert(error?.message || "Transaction Failed");
+    }
   };
 
-  // 🔹 ACCEPT JOB
+  // ✅ ACCEPT JOB
   const acceptJob = async () => {
-    await contract.methods.acceptJob(1).send({
-      from: account,
-    });
+    try {
+      await contract.methods.acceptJob(1).send({
+        from: account,
+      });
 
-    alert("Job Accepted");
+      alert("✅ Job Accepted");
+    } catch (error) {
+      console.log(error);
+
+      alert(error?.message || "Accept Failed");
+    }
   };
 
-  // 🔹 SUBMIT WORK
+  // ✅ SUBMIT WORK
   const submitWork = async () => {
-    await contract.methods.submitWork(1).send({
-      from: account,
-    });
+    try {
+      await contract.methods.submitWork(1).send({
+        from: account,
+      });
 
-    alert("Work Submitted");
+      alert("✅ Work Submitted");
+    } catch (error) {
+      console.log(error);
+
+      alert(error?.message || "Submit Failed");
+    }
   };
 
-  // 🔹 APPROVE PAYMENT
+  // ✅ APPROVE PAYMENT
   const approvePayment = async () => {
-    await contract.methods.approvePayment(1).send({
-      from: account,
-    });
+    try {
+      await contract.methods.approvePayment(1).send({
+        from: account,
+      });
 
-    alert("Payment Released");
+      alert("✅ Payment Released");
+    } catch (error) {
+      console.log(error);
+
+      alert(error?.message || "Payment Failed");
+    }
   };
 
   return (
     <div style={{ padding: "20px" }}>
       <h2>Escrow DApp</h2>
 
-      <p>Connected Wallet: {account}</p>
+      <p>Connected Wallet:</p>
+      <p>{account}</p>
 
-      <button onClick={createJob}>Create Job (1 ETH)</button>
-      <br />
-      <br />
+      <button onClick={createJob}>
+        Create Job (1 ETH)
+      </button>
 
-      <button onClick={acceptJob}>Accept Job</button>
-      <br />
-      <br />
-
-      <button onClick={submitWork}>Submit Work</button>
       <br />
       <br />
 
-      <button onClick={approvePayment}>Approve Payment</button>
+      <button onClick={acceptJob}>
+        Accept Job
+      </button>
+
+      <br />
+      <br />
+
+      <button onClick={submitWork}>
+        Submit Work
+      </button>
+
+      <br />
+      <br />
+
+      <button onClick={approvePayment}>
+        Approve Payment
+      </button>
     </div>
   );
 }
